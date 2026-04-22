@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AuraCast — Wear the Weather</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&family=Cabinet+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- BACKGROUND ORBS -->
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="orb orb-4"></div>
+</div>
+
+<!-- PARTICLE CANVAS -->
+<canvas id="particles"></canvas>
+
+<!-- RAIN EMERGENCY POPUP -->
+<div id="rainPopup" class="rain-popup hidden">
+  <div class="rain-popup-inner">
+    <div class="rain-icon">🌧️</div>
+    <h3>Rain Emergency Kit!</h3>
+    <p>Heavy rain detected for tomorrow. Don't forget:</p>
+    <ul>
+      <li>☂️ Umbrella or raincoat</li>
+      <li>👟 Waterproof footwear</li>
+      <li>💧 Waterproof mascara</li>
+      <li>🧴 Anti-frizz serum</li>
+    </ul>
+    <button onclick="closeRainPopup()">Got it! ✓</button>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding" class="onboarding-overlay">
+  <div class="onboarding-card">
+    <div class="onboarding-logo">✦ AuraCast</div>
+    <div class="onboarding-steps">
+
+      <div class="step active" id="step1">
+        <h2>Hello, gorgeous.<br/><em>Tell us your name.</em></h2>
+        <input type="text" id="userName" placeholder="Your name..." maxlength="30"/>
+        <button class="btn-next" onclick="nextStep(1)">Continue →</button>
+      </div>
+
+      <div class="step" id="step2">
+        <h2>How do you<br/><em>express yourself?</em></h2>
+        <div class="option-grid">
+          <div class="option-card" onclick="selectOption(this,'gender','She/Her')">👩 She / Her</div>
+          <div class="option-card" onclick="selectOption(this,'gender','He/Him')">👨 He / Him</div>
+          <div class="option-card" onclick="selectOption(this,'gender','They/Them')">🧑 They / Them</div>
+          <div class="option-card" onclick="selectOption(this,'gender','Prefer not to say')">✨ Prefer not to say</div>
+        </div>
+        <button class="btn-next" onclick="nextStep(2)">Continue →</button>
+      </div>
+
+      <div class="step" id="step3">
+        <h2>What's your<br/><em>skin type?</em></h2>
+        <div class="option-grid">
+          <div class="option-card" onclick="selectOption(this,'skin','Oily')">💧 Oily</div>
+          <div class="option-card" onclick="selectOption(this,'skin','Dry')">🌵 Dry</div>
+          <div class="option-card" onclick="selectOption(this,'skin','Combination')">🌸 Combination</div>
+          <div class="option-card" onclick="selectOption(this,'skin','Sensitive')">🌼 Sensitive</div>
+          <div class="option-card" onclick="selectOption(this,'skin','Normal')">✨ Normal</div>
+        </div>
+        <button class="btn-next" onclick="nextStep(3)">Continue →</button>
+      </div>
+
+      <div class="step" id="step4">
+        <h2>Your everyday<br/><em>style vibe?</em></h2>
+        <div class="option-grid">
+          <div class="option-card" onclick="selectOption(this,'style','Casual')">👕 Casual</div>
+          <div class="option-card" onclick="selectOption(this,'style','Professional')">👔 Professional</div>
+          <div class="option-card" onclick="selectOption(this,'style','Glam')">💅 Glam</div>
+          <div class="option-card" onclick="selectOption(this,'style','Streetwear')">🧢 Streetwear</div>
+          <div class="option-card" onclick="selectOption(this,'style','Cottagecore')">🌿 Cottagecore</div>
+          <div class="option-card" onclick="selectOption(this,'style','Minimalist')">🤍 Minimalist</div>
+        </div>
+        <button class="btn-next" onclick="finishOnboarding()">Let's go ✦</button>
+      </div>
+
+    </div>
+    <div class="step-dots">
+      <span class="dot active" id="dot1"></span>
+      <span class="dot" id="dot2"></span>
+      <span class="dot" id="dot3"></span>
+      <span class="dot" id="dot4"></span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app hidden">
+
+  <header class="header">
+    <div class="logo-wrap">
+      <div class="logo dance-text" id="logoText">✦ AuraCast</div>
+      <div class="tagline">Wear the Weather</div>
+    </div>
+    <div class="header-right">
+      <div class="user-greeting dance-text" id="userGreeting">Hi, there ✦</div>
+      <button class="profile-btn" onclick="resetProfile()" title="Edit Profile">⚙️</button>
+    </div>
+  </header>
+
+  <div class="location-bar">
+    <div class="location-display">
+      <span class="loc-icon">📍</span>
+      <span id="locationName">Detecting location...</span>
+    </div>
+    <div class="location-search">
+      <input type="text" id="cityInput" placeholder="Search city..."/>
+      <button onclick="searchCity()">🔍</button>
+    </div>
+  </div>
+
+  <section class="weather-hero reveal">
+    <div class="weather-card" id="weatherCard">
+      <div class="weather-main">
+        <div class="weather-icon-big" id="weatherIcon">🌤️</div>
+        <div class="weather-info">
+          <div class="temp dance-text" id="tempDisplay">--°C</div>
+          <div class="weather-desc" id="weatherDesc">Loading tomorrow's forecast...</div>
+          <div class="weather-meta">
+            <span id="humidityDisplay">💧 --%</span>
+            <span id="windDisplay">💨 -- km/h</span>
+            <span id="uvDisplay">☀️ UV --</span>
+          </div>
+        </div>
+      </div>
+      <div class="weather-tomorrow-label">Tomorrow's Forecast</div>
+      <div class="color-palette-row">
+        <span class="palette-label">Today's Color Palette ✦</span>
+        <div class="palette-swatches" id="colorPalette"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mood-section reveal">
+    <h2 class="section-title dance-text" id="moodTitle">How do you want to look today?</h2>
+    <div class="mood-pills">
+      <button class="mood-pill active" onclick="setMood(this,'Casual')">😌 Casual</button>
+      <button class="mood-pill" onclick="setMood(this,'Professional')">💼 Professional</button>
+      <button class="mood-pill" onclick="setMood(this,'Glam')">💅 Glam</button>
+      <button class="mood-pill" onclick="setMood(this,'Comfy')">🧸 Comfy</button>
+      <button class="mood-pill" onclick="setMood(this,'Bold')">🔥 Bold</button>
+    </div>
+  </section>
+
+  <section class="recs-section reveal">
+    <h2 class="section-title dance-text" id="recsTitle">Your AuraCast for Tomorrow ✦</h2>
+    <div class="recs-grid">
+      <div class="rec-card" id="outfitCard">
+        <div class="rec-card-header"><span class="rec-icon">👗</span><h3>Outfits</h3></div>
+        <div class="rec-items" id="outfitItems"></div>
+      </div>
+      <div class="rec-card" id="accessoryCard">
+        <div class="rec-card-header"><span class="rec-icon">👜</span><h3>Accessories</h3></div>
+        <div class="rec-items" id="accessoryItems"></div>
+      </div>
+      <div class="rec-card" id="cosmeticsCard">
+        <div class="rec-card-header"><span class="rec-icon">💄</span><h3>Cosmetics</h3></div>
+        <div class="rec-items" id="cosmeticsItems"></div>
+      </div>
+      <div class="rec-card" id="merchCard">
+        <div class="rec-card-header"><span class="rec-icon">🎒</span><h3>What's In Your Bag</h3></div>
+        <div class="rec-items" id="merchItems"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alerts-section reveal">
+    <h2 class="section-title dance-text" id="alertsTitle">Skin & Hair Weather Alerts 🌡️</h2>
+    <div class="alerts-row" id="skinAlerts"></div>
+  </section>
+
+  <div class="seasonal-banner" id="seasonalBanner"></div>
+
+  <section class="checklist-section reveal">
+    <h2 class="section-title dance-text" id="checklistTitle">Tomorrow's Bag Checklist ✓</h2>
+    <div class="checklist" id="bagChecklist"></div>
+  </section>
+
+  <section class="history-section reveal">
+    <h2 class="section-title dance-text" id="historyTitle">Recent Looks 📖</h2>
+    <div class="history-row" id="outfitHistory"></div>
+    <button class="save-look-btn" onclick="saveTodaysLook()">✦ Save Today's Look</button>
+  </section>
+
+  <section class="share-section reveal">
+    <div class="share-card" id="shareCard">
+      <div class="share-preview">
+        <div class="share-title">My AuraCast ✦</div>
+        <div class="share-weather" id="shareWeather"></div>
+        <div class="share-outfit" id="shareOutfit"></div>
+      </div>
+      <button class="share-btn" onclick="shareCard()">📤 Share My Look</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>✦ AuraCast — Wear the Weather, Own the Day</p>
+  </footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
